@@ -9,6 +9,8 @@ const app = express()
 app.set("view engine", "ejs")
 app.set("views", path.join(__dirname, "views"))
 
+app.use(express.static("public"))
+
 app.use("/auth", authRoutes)
 
 app.listen(3000, () => console.log("Server start at port: 3000."))
