@@ -11,7 +11,7 @@ const connectToDb = async () => {
 }
 
 const getDb = () => {
-    if (!_id) {
+    if (!_db) {
         throw new Error("COnnection to the database failed!")
     } 
     return _db
