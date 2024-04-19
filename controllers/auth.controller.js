@@ -49,3 +49,8 @@ exports.postLogin = async (req, res, next) => {
     res.redirect("/")
   })
 };
+
+exports.postLogout = (req, res, next) => {
+  authUtil.destroyUserAuthSession(req)
+  res.redirect("/login")
+}
