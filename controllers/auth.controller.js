@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const authUtil = require("../util/authentication");
+const userInputsValidation = require("../util/validation");
 
 exports.getSignup = (req, res, next) => {
   res.render("customer/auth/signup");
@@ -14,6 +15,36 @@ exports.postSignup = async (req, res, next) => {
     req.body.postal,
     req.body.city
   );
+
+  if (
+    !userInputsValidation.userDetailsAreValid(
+      req.body.email,
+      req.body.password,
+      req.body.fullname,
+      req.body.street,
+      req.body.postal,
+      req.body.city
+    ) ||
+    !userInputsValidation.emailIsConfirmed(
+      req.body.email,
+      req.body.confirmEmail
+    )
+  ) {
+    res.redirect("/signup");
+    return;
+  }
+  let userExist;
+  try {
+    userExist = await User.getUserWithSameEmail(req.body.email);
+  } catch (error) {
+    next(error);
+    return;
+  }
+
+  if (userExist) {
+    res.redirect("/signup");
+    return;
+  }
 
   try {
     await user.signup();
@@ -36,26 +67,25 @@ exports.postLogin = async (req, res, next) => {
   try {
     existingUser = await User.getUserWithSameEmail(email);
   } catch (error) {
-    next(error)
-    next
+    next(error);
+    next;
   }
 
   if (!existingUser) {
     res.redirect("/login");
     return;
   }
-  let passwordMatched
+  let passwordMatched;
 
   try {
-    passwordMatched = await User.hasMatchedPassword(password,
+    passwordMatched = await User.hasMatchedPassword(
+      password,
       existingUser.password
-    )
+    );
   } catch (error) {
-    next(error)
-    return
+    next(error);
+    return;
   }
-    ;
-
   if (!passwordMatched) {
     res.redirect("/login");
     return;
