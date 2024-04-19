@@ -1,5 +1,5 @@
 const User = require("../models/user.model");
-const authUtil = require("../util/authentication")
+const authUtil = require("../util/authentication");
 
 exports.getSignup = (req, res, next) => {
   res.render("customer/auth/signup");
@@ -15,7 +15,12 @@ exports.postSignup = async (req, res, next) => {
     req.body.city
   );
 
-  await user.signup();
+  try {
+    await user.signup();
+  } catch (error) {
+    next(error);
+    return;
+  }
 
   res.redirect("/login");
 };
@@ -27,18 +32,29 @@ exports.getLogin = (req, res, next) => {
 exports.postLogin = async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-
-  const existingUser = await User.getUserWithSameEmail(email);
+  let existingUser;
+  try {
+    existingUser = await User.getUserWithSameEmail(email);
+  } catch (error) {
+    next(error)
+    next
+  }
 
   if (!existingUser) {
     res.redirect("/login");
     return;
   }
+  let passwordMatched
 
-  const passwordMatched = await User.hasMatchedPassword(
-    password,
-    existingUser.password
-  );
+  try {
+    passwordMatched = await User.hasMatchedPassword(password,
+      existingUser.password
+    )
+  } catch (error) {
+    next(error)
+    return
+  }
+    ;
 
   if (!passwordMatched) {
     res.redirect("/login");
@@ -46,11 +62,11 @@ exports.postLogin = async (req, res, next) => {
   }
 
   authUtil.createUserSession(req, existingUser, () => {
-    res.redirect("/")
-  })
+    res.redirect("/");
+  });
 };
 
 exports.postLogout = (req, res, next) => {
-  authUtil.destroyUserAuthSession(req)
-  res.redirect("/login")
-}
+  authUtil.destroyUserAuthSession(req);
+  res.redirect("/login");
+};
